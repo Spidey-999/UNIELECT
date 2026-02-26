@@ -51,11 +51,50 @@ model Election {
   tokens           Token[]
   ballots          Ballot[]
   auditLogs        AuditLog[]
+  verifiedVoters   VerifiedVoter[]
+  smsVerifications SmsVerification[]
 
   @@index([startsAt])
   @@index([endsAt])
   @@index([createdAt])
   @@map("elections")
+}
+
+model VerifiedVoter {
+  id         String   @id @default(cuid())
+  electionId String
+  externalId String
+  phoneNumber String
+  verifiedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  tokens   Token[]
+  ballots  Ballot[]
+
+  @@unique([electionId, externalId])
+  @@unique([electionId, phoneNumber])
+  @@index([electionId])
+  @@map("verified_voters")
+}
+
+model SmsVerification {
+  id          String   @id @default(cuid())
+  electionId  String
+  externalId  String
+  phoneNumber String
+  codeHash    String
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@index([electionId, externalId])
+  @@index([electionId, phoneNumber])
+  @@index([expiresAt])
+  @@map("sms_verifications")
 }
 
 model Race {
@@ -106,15 +145,20 @@ model Token {
   issuedAt          DateTime  @default(now())
   usedAt            DateTime?
   expiresAt         DateTime?
+  email             String?   // Store email for direct token access
   eligibleStudentId String?
+  verifiedVoterId   String?
 
   election        Election        @relation(fields: [electionId], references: [id], onDelete: Cascade)
   eligibleStudent EligibleStudent? @relation(fields: [eligibleStudentId], references: [id], onDelete: SetNull)
+  verifiedVoter   VerifiedVoter?  @relation(fields: [verifiedVoterId], references: [id], onDelete: SetNull)
 
   @@index([value])
   @@index([electionId])
   @@index([usedAt])
   @@index([expiresAt])
+  @@index([verifiedVoterId])
+  @@index([email])
   @@map("tokens")
 }
 
@@ -122,15 +166,19 @@ model Ballot {
   id         String   @id @default(cuid())
   electionId String
   userId     String?  // Link to registered users
+  verifiedVoterId String?
   castAt     DateTime @default(now())
 
   election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
   user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  verifiedVoter VerifiedVoter? @relation(fields: [verifiedVoterId], references: [id], onDelete: SetNull)
   choices  BallotChoice[]
 
   @@index([electionId])
   @@index([userId])
+  @@index([verifiedVoterId])
   @@index([castAt])
+  @@unique([electionId, verifiedVoterId])
   @@map("ballots")
 }
 

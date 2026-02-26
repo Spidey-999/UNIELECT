@@ -22,7 +22,7 @@ export const authenticateAdmin = async (req: AuthRequest, res: Response, next: N
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id?: string; email?: string };
     
     // Validate JWT structure
     if (!decoded.id || !decoded.email) {

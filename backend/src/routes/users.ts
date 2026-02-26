@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
+import { authenticateUser, UserRequest } from '../middleware/userAuth';
 
 const router = express.Router();
 
@@ -165,9 +166,9 @@ router.post('/login', loginValidation, async (req: express.Request, res: express
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT token (id and type must match UserRequest/auth middleware expectations)
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { id: user.id, email: user.email, type: 'user' },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
@@ -189,11 +190,11 @@ router.post('/login', loginValidation, async (req: express.Request, res: express
   }
 });
 
-// Get user profile
-router.get('/profile', async (req: any, res: express.Response) => {
+// Get user profile (requires authentication)
+router.get('/profile', authenticateUser, async (req: UserRequest, res: express.Response) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: req.user!.id },
       select: {
         id: true,
         email: true,

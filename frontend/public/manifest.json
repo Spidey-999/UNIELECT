@@ -1,1 +1,56 @@
-{\n  \"name\": \"Student Election Voting\",\n  \"short_name\": \"StudentVote\",\n  \"description\": \"Secure and anonymous student election voting platform\",\n  \"start_url\": \"/\",\n  \"display\": \"standalone\",\n  \"background_color\": \"#ffffff\",\n  \"theme_color\": \"#4f46e5\",\n  \"orientation\": \"portrait-primary\",\n  \"icons\": [\n    {\n      \"src\": \"/favicon-72x72.png\",\n      \"sizes\": \"72x72\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-96x96.png\",\n      \"sizes\": \"96x96\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-128x128.png\",\n      \"sizes\": \"128x128\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-144x144.png\",\n      \"sizes\": \"144x144\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-152x152.png\",\n      \"sizes\": \"152x152\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-192x192.png\",\n      \"sizes\": \"192x192\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-384x384.png\",\n      \"sizes\": \"384x384\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"/favicon-512x512.png\",\n      \"sizes\": \"512x512\",\n      \"type\": \"image/png\"\n    }\n  ],\n  \"categories\": [\"education\", \"productivity\", \"utilities\"],\n  \"lang\": \"en\",\n  \"dir\": \"ltr\",\n  \"scope\": \"/\"\n}
+{
+  "name": "Student Election Voting",
+  "short_name": "StudentVote",
+  "description": "Secure and anonymous student election voting platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/"
+}

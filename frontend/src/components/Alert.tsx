@@ -1,5 +1,6 @@
 import React from 'react'
 import { CheckCircle, AlertCircle, X } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface AlertProps {
   type: 'success' | 'error' | 'warning' | 'info'
@@ -9,58 +10,41 @@ interface AlertProps {
 }
 
 const Alert: React.FC<AlertProps> = ({ type, message, onClose, className = '' }) => {
-  const getStyles = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200 text-green-800'
-      case 'error':
-        return 'bg-red-50 border-red-200 text-red-800'
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800'
-      case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-800'
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-800'
-    }
+  const styles: Record<string, string> = {
+    success: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-800',
+    error: 'border-red-500/30 bg-red-500/5 text-red-800',
+    warning: 'border-amber-500/30 bg-amber-500/5 text-amber-800',
+    info: 'border-sky-500/30 bg-sky-500/5 text-sky-800',
   }
 
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="h-5 w-5" />
-      case 'error':
-        return <AlertCircle className="h-5 w-5" />
-      case 'warning':
-        return <AlertCircle className="h-5 w-5" />
-      case 'info':
-        return <AlertCircle className="h-5 w-5" />
-      default:
-        return null
-    }
+  const icons = {
+    success: <CheckCircle className="h-4 w-4 shrink-0" strokeWidth={2} />,
+    error: <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2} />,
+    warning: <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2} />,
+    info: <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2} />,
   }
 
   return (
-    <div className={`border rounded-md p-4 ${getStyles()} ${className}`} role="alert">
-      <div className="flex items-center">
-        <div className="flex-shrink-0">
-          {getIcon()}
-        </div>
-        <div className="ml-3 flex-1">
-          <p className="text-sm font-medium">{message}</p>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-ed-md border p-4 ${styles[type] || styles.info} ${className}`}
+      role="alert"
+    >
+      <div className="flex items-start gap-3">
+        {icons[type]}
+        <p className="flex-1 font-mono text-body-sm leading-relaxed">{message}</p>
         {onClose && (
-          <div className="ml-auto pl-3">
-            <button
-              onClick={onClose}
-              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-gray-600 rounded"
-              aria-label="Dismiss"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded-ed-sm p-1 opacity-60 hover:opacity-100 transition-opacity"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 

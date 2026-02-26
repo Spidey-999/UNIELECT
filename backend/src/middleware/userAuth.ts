@@ -23,7 +23,7 @@ export const authenticateUser = async (req: UserRequest, res: Response, next: Ne
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id?: string; email?: string; type?: string };
     
     if (!decoded.id || !decoded.email || decoded.type !== 'user') {
       return res.status(401).json({ error: 'Invalid token format.' });

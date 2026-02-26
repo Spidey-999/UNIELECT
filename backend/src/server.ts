@@ -76,8 +76,9 @@ app.use('/api/elections', electionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 
-// Apply stricter rate limiting to token generation
-app.use('/api/elections/:id/get-token', tokenLimiter);
+// Apply stricter rate limiting to verification / token flows
+app.use('/api/elections/:id/request-code', tokenLimiter);
+app.use('/api/elections/:id/verify-code', tokenLimiter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -85,10 +86,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const error = err instanceof Error ? err : new Error(String(err));
   console.error('Error details:', {
-    message: err.message,
-    stack: err.stack,
+    message: error.message,
+    stack: error.stack,
     url: req.url,
     method: req.method,
     timestamp: new Date().toISOString(),
@@ -97,9 +99,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   
   // Don't expose internal error details in production
   const isDevelopment = process.env.NODE_ENV === 'development';
-  res.status(err.status || 500).json({
-    error: isDevelopment ? err.message : 'Internal server error',
-    ...(isDevelopment && { stack: err.stack })
+  const statusCode = (err as { status?: number })?.status ?? 500;
+  res.status(statusCode).json({
+    error: isDevelopment ? error.message : 'Internal server error',
+    ...(isDevelopment && { stack: error.stack })
   });
 });
 

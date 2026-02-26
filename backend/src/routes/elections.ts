@@ -1,7 +1,8 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { prisma } from '../server';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { prisma } from '../server';
 
 const router = express.Router();
 
@@ -94,18 +95,23 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
   }
 });
 
-// POST /api/elections/:id/get-token - Get voting token
-router.post('/:id/get-token', [
-  body('turnstileToken').optional().isString()
+// POST /api/elections/:id/token - Get voting token (no SMS verification)
+router.post('/:id/token', [
+  body('email').isEmail().withMessage('Valid email required')
 ], async (req: express.Request, res: express.Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const first = errors.array()[0];
+      return res.status(400).json({ error: typeof first === 'object' && first.msg ? first.msg : 'Invalid input' });
     }
 
+    const electionId = req.params.id;
+    const { email } = req.body as { email: string };
+
     const election = await prisma.election.findUnique({
-      where: { id: req.params.id }
+      where: { id: electionId },
+      include: { races: { include: { candidates: true } } }
     });
 
     if (!election) {
@@ -120,49 +126,40 @@ router.post('/:id/get-token', [
       return res.status(400).json({ error: 'Voting has ended' });
     }
 
-    // TODO: Implement Turnstile verification if configured
-    if (process.env.TURNSTILE_SECRET_KEY && req.body.turnstileToken) {
-      try {
-        const turnstileResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `secret=${encodeURIComponent(process.env.TURNSTILE_SECRET_KEY)}&response=${encodeURIComponent(req.body.turnstileToken)}`,
-        });
-        
-        const result = await turnstileResponse.json();
-        if (!result.success) {
-          return res.status(400).json({ error: 'CAPTCHA verification failed' });
-        }
-      } catch (error) {
-        console.error('Turnstile verification error:', error);
-        return res.status(500).json({ error: 'CAPTCHA verification error' });
-      }
-    }
-
-    // Generate a unique token
-    const tokenValue = crypto.randomBytes(16).toString('hex');
-    const expiresAt = new Date(election.endsAt);
-
-    const token = await prisma.token.create({
-      data: {
-        electionId: election.id,
-        value: tokenValue,
-        expiresAt
+    // Create or get existing token for this email
+    let tokenRecord = await prisma.token.findFirst({
+      where: {
+        electionId,
+        email,
+        usedAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]
       }
     });
 
-    res.json({ token: token.value });
+    if (!tokenRecord) {
+      const tokenValue = crypto.randomBytes(16).toString('hex');
+      const expiresAt = new Date(election.endsAt);
+      tokenRecord = await prisma.token.create({
+        data: {
+          electionId,
+          value: tokenValue,
+          expiresAt,
+          email
+        }
+      });
+    }
+
+    res.json({ token: tokenRecord.value });
   } catch (error) {
-    console.error('Token generation error:', {
+    console.error('Get token error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       electionId: req.params.id,
       timestamp: new Date().toISOString()
     });
-    res.status(500).json({ error: 'Failed to generate voting token' });
+    res.status(500).json({ error: 'Failed to get voting token' });
   }
 });
+
 
 // POST /api/elections/:id/vote - Cast vote
 router.post('/:id/vote', [
@@ -239,7 +236,8 @@ router.post('/:id/vote', [
       // Create ballot
       const ballot = await tx.ballot.create({
         data: {
-          electionId: election.id
+          electionId: election.id,
+          verifiedVoterId: dbToken.verifiedVoterId
         }
       });
 
@@ -266,7 +264,8 @@ router.post('/:id/vote', [
     });
 
     res.json({ success: true, ballotId: result.id });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
     console.error('Vote casting error:', {
       message: error.message,
       electionId: req.params.id,
